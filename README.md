@@ -136,7 +136,11 @@ The support of Deutsche Forschungsgemeinschaft grant SFB 803 Z2 is gratefully ac
 
 ## Authors
 
+Florian Pein
 
+Stanislav Syekirin
+
+Florian Ebmeier
 
 ## License
 
