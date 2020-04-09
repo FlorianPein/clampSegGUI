@@ -4,7 +4,7 @@ This graphical user interface allows easy access to the model-free idealization 
 
 # Installation
 
-Please see `installation.pdf` for how to install clampSegGUI and its dependencies.
+Please see our [installation guide](installation.md) for how to install clampSegGUI and its dependencies.
 
 # Start
 
@@ -130,17 +130,17 @@ The plot can be saved by clicking on the save icon (marked in blue).
 
 Please send bug reports or any other feedback to the developers by emailing `fp366@cam.ac.uk`. Your feedback is highly appreciated.
 
-## Acknowledgements
-
-The support of Deutsche Forschungsgemeinschaft grant SFB 803 Z2 is gratefully acknowledged.
-
 ## Authors
 
-Florian Pein
+Florian Ebmeier
 
 Stanislav Syekirin
 
-Florian Ebmeier
+Florian Pein
+
+## Acknowledgements
+
+Support of Deutsche Forschungsgemeinschaft grant SFB 803 Z2 is gratefully acknowledged.
 
 ## License
 
