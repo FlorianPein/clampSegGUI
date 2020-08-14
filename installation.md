@@ -70,7 +70,7 @@ Before running clampSegGUI, check whether you have the following requirements an
 
     For further help how to install R packages, please visit [https://www.r-project.org/](https://www.r-project.org/).
 
-    Important note: `clampSeg-1.1-0` is submitted to CRAN, but its appearance might take few more days because of their summer break. In the mean while please install it from source. Download the zip file, which is in the top level on github, and type
+    Important note: `clampSeg-1.1-0` is submitted to CRAN, but its appearance might take few more days because of their summer break. In the mean while please install it from source. Download the [zip file](clampSeg_1.1-0.tar.gz) and type
 
      ```
          R CMD INSTALL clampSeg_1.1-0.tar.gz
