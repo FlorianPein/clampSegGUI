@@ -1,148 +1,169 @@
 # About this GUI
 
-This graphical user interface allows easy access to the model-free idealization methods in the R-package *clampSeg*, which is available on [CRAN](https://cran.r-project.org/package=clampSeg). Currently, it supports the model-free segmentation method [JULES](https://ieeexplore.ieee.org/document/8374882), which allows a precise idealization of events that are only few data points long by combining a multiresolution criterion and local deconvolution.
+This graphical user interface allows easy access to the multiscale model-free idealization methods in the R-package *clampSeg*, which is available on [CRAN](https://cran.r-project.org/package=clampSeg). It supports the model-free segmentation methods [JSMURF](https://ieeexplore.ieee.org/document/6655999), [JULES](https://ieeexplore.ieee.org/document/8374882) and [HILDE](https://arxiv.org/abs/2008.02658). These methods combine multiscale testing with deconvolution to idealise patch clamp recordings. They allow to deal with subconductance states and flickering. Further details are given in `Review.pdf`.
 
 # Installation
 
-Please see our [installation guide](installation.md) for how to install clampSegGUI and its dependencies.
+Please see `installation.pdf` for how to install clampSegGUI and its dependencies.
 
 # Start
 
 From the top level directory of the program, where `run.pyw` is, run the program:
 
+```bash
     python run.pyw
+```
 
 Here, `python` should refer to at least Python 3.5. If there are multiple installations of Python on your system, your command might need to be more specific, e.g. `python3 run.pyw` or `python3.5 run.pyw`.
 
 You should see something like this:
 
-![fresh start](images/freshstart.png "Fresh start")
+![fresh start](images/freshstart.png "Fresh start")\
+
 
 # Projects
 
-To start a new project, click on the *New project* button. To load a previous project click on the *Load project* button.
+To start a new project, click on the `New project` button. To load a previous project click on the `Load project` button.
 
 Assuming you started a new project, it will look something like this:
 
-![new project](images/new_project_picture.png "New project")A click on the *Load project* button will start a filedialog asking you to select the project. The project should have the ending .csg. Note that this filedialog, and most other filedialogs, will freeze the main window for as long as the filedialog is open.
+![new project](images/new_project_picture.png "New project")\
+A click on the `Load project` button will start a filedialog asking you to select the project. The project should have the ending *.csg*. Note that this filedialog, and most other filedialogs, will freeze the main window for as long as the filedialog is open.
 
-![load project](images/filedialog_load_project.png "Load a project")To save your project press the *Save project* or the *Save project as* button. If this project was a new project or you pressed the *Save project as* button, a filedialog will open, asking you to provide a filename.
+![load project](images/filedialog_load_project.png "Load a project")\
+To save your project press the `Save project` or the `Save project as` button. If this project was a new project or you pressed the `Save project as` button, a filedialog will open, asking you to provide a filename.
 
-![save project as](images/filedialog_save_project_as.png "Saving a project as")
+![save project as](images/filedialog_save_project_as.png "Saving a project as")\
+
 
 # Datasets
 
-### Adding and removing datasets
+## Adding and removing datasets
 
-To add one or multiple datasets, click on the *Add datasets* button. This will open a filedialog:
+To add one or multiple datasets, click on the `Add datasets` button. This will open a filedialog:
 
-![Adding datasets](images/add_dataset_filedialog.png "Adding datasets")Here you can select one or multiple datasets, with filename extension .atf or .abf. Reading a file with a mislabeled ending, will result in an error.
+![Adding .abf datasets](images/Load_ABF.png "Adding .abf datasets")\
 
-![Files selected](images/file_selected.png "Files selected")Clicking on the *Open* button will, after a short wait, open a window asking you to select a channel, optionally divide it by another channel and ask you for the appropriate unit of the result. This window will open for every dataset selected.
 
-![Selecting a channel](images/channel_selector.png "Selecting a channel")To remove datasets, select all datasets you want to remove on the left. Then click on the *Remove dataset* button. A window will open and ask you to confirm. Click *Ok* to remove the selected datasets.
+![Adding .abf datasets](images/Load_ATF.png "Adding .abf datasets")\
+Here you can select one or multiple datasets, with filename extension *.abf* or *.atf*. Reading a file with a mislabeled ending will result in an error.
 
-![Deleting datasets](images/delete_datasets.png "Deleting selected datasets")
+![Files selected](images/file_selected.png "Files selected")\
+Clicking on the `Open` button will, after a short wait, open a window asking you to select a channel, optionally divide it by another channel and ask you for the appropriate unit of the result.
 
-### Viewing and editing metadata
+![Selecting a channel](images/LoadingScreen.png "Selecting a channel")\
+There are two options available to load datasets. Clicking on `Load All` will load all datasets, which have the same number of channels, same channel names and same channel units as the first dataset in the queue. If there are datasets in queue with different parameters, the window will pop up again. Alternatively, clicking on `Load` will only load the first dataset in queue and the window will pop up again (if there are further datasets to be loaded), which allows customizing loading for each dataset individually.
 
-To view the metadata of a dataset, select a single dataset on the left and the metadata will be shown on the right side.
+To remove datasets from the project, select all datasets you want to remove on the left. Then click on the `Remove dataset` button. A window will open and ask you to confirm. Click `Ok` to remove the selected datasets from the project.
 
-![metadata view](images/metadata_view.png "Metadata of a dataset")
+![Deleting datasets](images/Delete_Datasets.png "Deleting selected datasets")\
 
-To edit the metadata of a dataset select all datasets for which you want to change the metadata and press the *Edit datasets* button. This will open a new window, where you can input the metadata (explained below). Clicking on *Apply* will set the metadata for all selected datasets.
 
-![Editing the metadata](images/metadata_edit.png "Editing the metadata of all selected datasets")
+## Viewing and editing metadata
 
-##### Metadata
+To view the metadata of a dataset, select a single dataset on the left and the metadata will be shown on the right side. 
 
-Our method requires a correct specification of the used lowpass filter, typically a Bessel filter. So far only Bessel filters are supported. Moreover, a quantile (critical value) for the multiresolution criterion has to be selected to decide between events and noise. The quantile can either be given by the user or be computed by Monte-Carlo (MC) simulations. We strongly recommend to perform Monte-Carlo simulations unless you have good reasons against it. MC simulations and hence the quantile depends on the number of observations and the filter. MC simulations may take a while, depending on the size of the dataset and the number of repetitions it may even last up to a few hours. However, their results are stored and hence they have to be performed only once for each filter type and for each size of the dataset. A recomputation is also required when the number of repetitions is increased. Storing and loading happens in the background. Only at the first time (unless the R package *R.cache* was used before) the user is asked to confirm that a folder is created to store those computations permanently on the disk (they can be deleted at any time). If the user declines it a temporary folder is used and Monte-Carlo simulations have to be computed the next time again. In detail, the following parameters can be chosen:
+![metadata view](images/metadata_view.png "Metadata of a dataset")\
+To edit the metadata of a dataset select all datasets for which you want to change metadata and press the `Edit datasets` button. This will open a new window, where you can input the metadata. This includes a description of the filter, the desired method to calculate a fit and its tuning parameters (details are explained below). Clicking on `Apply` will set all metadata that were changed for all selected datasets.
 
-+ Sampling rate in Hz
+![Editing the metadata](images/EditDatasets_HILDE.png  "Edit Datasets window")\
 
-  The sampling rate of the dataset. This is read from the input file, but should be checked.
 
-+ Cut-off frequency in Hz
+### Filter parameters
 
-  The cut-off frequency of the lowpass filter. Default value is "NA" and it must be configured before computation is possible.
+Our methods require a correct specification of the used lowpass filter. So far only Bessel filters are supported. The following parameters can be specified.
 
-+ Filter type
+*   Sampling rate in Hz
 
-  The type of the lowpass filter, currently only Bessel filters with different number of poles are supported. Default value is "NA" and it must be configured before computation is possible.
+    The sampling rate of the dataset. This is read from the input file, but should be checked.
 
-+ Description
+*   Cut-off frequency in Hz
 
-  An option to describe the data set. This is of purely informative character for the user.
+    The cut-off frequency of the lowpass filter. Default value is `NA` and it must be configured before an idealization can be computed for this dataset.
 
-+ Provide parameters for quantile simulation / Provide quantile
+*   Filter type
 
-  Select Provide parameters for quantile simulation if you want to perform MC simulations and Provide quantile if you want to provide the quantile directly. This changes which of the lower parameters are available.
+    The type of the lowpass filter, currently only Bessel filters with different number of poles are supported. Default value is `NA` and it must be configured before an idealization can be computed for this dataset.
 
-+ Significance level
+### Description
 
-  A probability (numeric between 0 and 1) giving the significance level of the multiresolution criterion. This parameter provides a tradeoff between the risk of missing true events that are hard to detect and the risk of detecting false positives. The probability of detecting at least one false positive is approximately equal to this parameter. However, larger values allow a better detection of small events.
+An option to describe the data set for the users convenience.
 
-  By default, we suggest 0.05. If a more rigorous error control is desired, smaller values can be chosen, e.g. 0.01. If important events are hard to detect, the value should be increased, e.g. 0.5.
+### Method
 
-+ Repetitions
+Radio buttons for selecting the idealization method. All three approaches $\operatorname{JSMURF}$, $\operatorname{JULES}$ and $\operatorname{HILDE}$ can assume homogeneous noise, but only $\operatorname{JSMURF}$ and $\operatorname{HILDE}$ allow for heterogeneous noise. Hence, there are five methods to choose from: `JSMURF (homogeneous noise)`, `JSMURF (heterogeneous noise)`, `JULES (homogeneous noise)`, `HILDE (homogeneous noise)` and `HILDE (heterogeneous noise)`. See Section II-B in `Review.pdf` to decide which method is suitable for a given dataset.
 
-  An integer giving the number of repetitions. We recommend 10,000, the default value, for a thorough analysis that is published, 500-1000 for a quick analysis and 10-100 for a quick try.
+### Tuning parameters
 
-+ Quantile
+Which tuning parameters can be chosen depends on the selected method. All parameters can be tuned to achieve better idealizations under specific circumstances. We advise to leave the default parameters unchanged unless specific reasons exist. Further details are given in `Review.pdf`.
 
-  A numeric giving the quantile.
+Similar to the *R* code, quantiles (critical values) are required to distinguish between events and noise. The quantiles are usually computed by Monte-Carlo simulations. Monte-Carlo simulations may take a while, depending on the size of the dataset and the number of repetitions it may even last up to a few hours. They are stored and loaded automatically in the background. Only at the first time (unless the R package `R.cache` was used before) the user is asked to confirm that a folder is created to store those computations permanently on the disk (they can be deleted at any time). If the user declines it, a temporary folder is used and Monte-Carlo simulations have to be computed the next time again.
 
-### Calculating  and exporting fits
 
-Before the calculation of a dataset is possible, the Cut-off frequency and the Filter type have to be specified via *Edit datasets*.
+*   Provide parameters for quantile simulation / Provide quantile
 
-To put datasets into the queue for calculating fits or removing them from the queue click on the empty / filled checkbox on the left in the column *Queue* (marked in red in the following picture). 
+   `JSMURF (homogeneous noise)` and `JULES (homogeneous noise)` rely on a single quantile, which can be preassigned by the user (e.g. based on previous calculations) as an alternative to Monte-Carlo simulations. We strongly recommend to the inexperienced user to perform Monte-Carlo simulations. Select `Provide parameters for quantile simulation` if you want to perform MC simulations and `Provide quantile` if you want to provide the quantile directly. This changes which of the lower parameters can be selected.
 
-![Queuing a dataset](images/queue_checkboxes.png "Queuing a dataset by clicking on the checkbox")
+*   Quantile
 
-If the queue is not empty, click on the button marked *Start computation for selected dataset(s)* to start the computation. This will open a new window informing you that the computation is currently running. Note that this may take a while, depending on the the size of the dataset and the number of repetitions for the Monte-Carlo simulations. All datasets in the queue are computed step by step. For each one the computation starts with Monte-Carlo simulations if required and then with the main calculation.
+    A real-valued number giving the quantile.
 
-You can stop the calculation of the quantile by clicking on the *Stop!* button of the window.
+*   Alpha
 
-![Stop the quantile calculation](images/stop_quantile_calculation.png "Stop the quantile calculation by clicking the Stop! button")
+    A probability (a real-valued number between 0 and 1) giving the error level $\alpha$.
+  
+*   Alpha1, Alpha2
 
-The calculation of the fits can currently not be stopped via a button and might take several minutes.
+    For $\operatorname{HILDE}$ the significance level $\alpha$ is split between `Alpha1` $\alpha_1$ and `Alpha2` $\alpha_2$ ($\alpha = \alpha_1 + \alpha_2$).
 
-![Cannot stop fit calculation](images/dont_stop_fits.png "You cannot stop the fit calculation")
+*   Repetitions
 
-Once the fits are calculated, you can export the fit values as CSV datafiles. To do so, click on the *Export fit as CSV* button. This will open a filedialog for every selected dataset, asking you to specify a filename.
+    An integer giving the number of repetitions $r$ for the Monte-Carlo simulations. Repetitions are individually selected and stored for the two HILDE methods and for JSMURF and JULES.
 
-![csv filedialog](images/csv_filedialog.png "Choose a filename and click Save to confirm")
+## Calculating  and exporting idealizations
 
-The resulting csv file will have a header as the first line. The data afterwards is comma separated. The file can be opened with a texteditor or with any spreadsheet program.
+Before the calculation for a dataset is possible, the cut-off frequency and the filter type have to be specified via `Edit datasets`.
 
-![csv file](images/csv_data.png "Example fit data in a texteditor")
+To put datasets into the queue for calculating fits or removing them from the queue click on the empty / filled checkbox on the left in the column `Queue` (marked in red in the following picture). A new calculation overwrites the old idealization. To obtain two idealizations for the same dataset, it is required to add the dataset a second time to the project.
 
-### Creating plots
+![Queuing a dataset](images/queue_checkboxes_new.png "Queuing a dataset by clicking on the checkbox")\
+If the queue is not empty, click on the button marked `Start computation for selected dataset(s)` to start the computation. This will open a new window informing you that the computation is currently running. Note that this may take a while, depending on the the size of the dataset and the number of repetitions for the Monte-Carlo simulations. All datasets in the queue are computed step by step. For each one the computation starts with Monte-Carlo simulations if required and then with the main calculation.
 
-To create a plot of the data, select one or multiple datasets and press the *Create plots* button. This will open a new window for every dataset selected. In this window you can click the  *Plot histogram* button to create a histogram plot of the data. If the fit for the dataset has been calculated, it will be in the plot as a red line.
+You can stop the calculation of the quantile by clicking on the `Stop!` button of the window.
 
-![Plot example](images/plot_example.png "Example of a plot with histogram and calculated fit.")
+![Stop the quantile calculation](images/stop_quantile_calculation.png "Stop the quantile calculation by clicking the Stop! button")\
+The calculation of the idealizations can currently not be stopped via a button and might take several minutes.
 
-The plot can be saved by clicking on the save icon (marked in blue).
+![Cannot stop fit calculation](images/ComputationFit.png "You cannot stop the fit calculation")\
+Once the idealizations are calculated, you can export the idealization as *csv* files. To do so, click on the `Export fit as CSV` button. This will open a filedialog for every selected dataset, asking you to specify a filename.
 
-## Reporting issues
+![csv filedialog](images/Export_CSV.png "Choose a filename and click Save to confirm")\
+The resulting *csv* file will have a header as the first line. The data afterwards is comma separated. The file can be opened with any texteditor or spreadsheet program.
 
-Please send bug reports or any other feedback to the developers by emailing `fp366@cam.ac.uk`. Your feedback is highly appreciated.
+![csv file](images/SVNfile.png)\
 
-## Authors
 
-Florian Ebmeier
+## Creating plots
 
-Stanislav Syekirin
+To create a plot of the data, select one or multiple datasets and press the `Create plots` button. This will open a new window for every dataset selected. In this window you can click the  `Plot histogram` button to create a histogram plot of the data. If the fit for the dataset has been calculated, it will appear in the plot as a red line.
 
-Florian Pein
+![Plot example](images/PlotData.png)\
 
-## Acknowledgements
+The plot can be saved by clicking on the save icon.
 
-Support of Deutsche Forschungsgemeinschaft grant SFB 803 Z2 is gratefully acknowledged.
+# Reporting issues
 
-## License
+Please send bug reports or any other feedback to the developers by emailing [Florian Pein](fp366@cam.ac.uk). Your feedback is highly appreciated.
+
+# Acknowledgements
+
+The support of Deutsche Forschungsgemeinschaft grant SFB 803 Z2 is gratefully acknowledged.
+
+# Authors
+
+Mariyam Khan, Florian Ebmeier, Stanislav Syekirin and Florian Pein
+
+# License
 
 ```
     This program is free software: you can redistribute it and/or modify

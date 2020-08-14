@@ -6,22 +6,26 @@ Please note that so far we have only tested the program systematically on a Linu
 
 To use clampSegGUI, unzip the zip file and ensure that you have the dependencies explained below. Start the GUI by running the file `run.pyw`. From the top level directory of the program, where `run.pyw` is, you have to type:
 
+```bash
     python run.pyw
+```
 
-Here, `python` should refer to at least Python 3.5.3 If there are multiple installations of Python on your system, your command might need to be more specific, e.g. `python3 run.pyw` or `python3.5 run.pyw`.
+Here, `python` should refer to at least Python 3.5. If there are multiple installations of Python on your system, your command might need to be more specific, e.g. `python3 run.pyw` or `python3.5 run.pyw`.
 
 ## Dependencies
 
 Before running clampSegGUI, check whether you have the following requirements and install them if necessary (the program also performs checks on startup):
 
-1. Python 3.5.3 or later
+1. Python 3.5 or later
 
     You can check this by typing 'python' (or a more specific command as explained above) in the command line. For further support, in particular how to install python please visit [https://www.python.org/](https://www.python.org/).
 
 2. This Python version can import `tkinter`
     This is almost always the case unless you've built Python manually. You can test this by starting Python and typing
 
+    ```python
         import tkinter
+    ```
 
     You should get no message. If this fails, the solution is highly system-dependent. On a Debian-based system like Ubuntu you might want to do `sudo apt-get install tk-dev`, then rebuild Python with `make`. A much more easier solution would be to use pre-compiled Python binaries. The probability is high that they are already in your system's official repository, but alternatives exist as well (including commercial ones [ActivePython](https://www.activestate.com/products/activepython/)).
 
@@ -29,15 +33,19 @@ Before running clampSegGUI, check whether you have the following requirements an
 
     You can check this by starting this python version (check it especially carefully if you have multiple Python versions on your system) and typing
 
+    ```python
         import numpy
         import matplotlib
         import rpy2
+    ```
 
     You should get no message. To check their versions type:
 
+    ```python
         numpy.__version__
         matplotlib.__version__
         rpy2.__version__
+    ```
     
     If this fails, please see [NumPy docs](https://docs.scipy.org/doc/numpy/user/install.html), [Matplotlib docs](https://matplotlib.org/users/installing.html) or [rpy2 docs](http://rpy.sourceforge.net/rpy2/doc-dev/html/overview.html#installation), respectively.
 
@@ -45,26 +53,38 @@ Before running clampSegGUI, check whether you have the following requirements an
 
     You can check this by typing 'R' in the command line. For further support, in particular how to install R, please visit [https://www.r-project.org/](https://www.r-project.org/).
 
-5. R packages `clampSeg` and `readABF`
+5. R packages `clampSeg` (version 1.1-0 or later) and `readABF`
 
     You can check this (they will not be installed, unless you used them before) by starting R (type R in the command line) and typing
 
+    ```r
         library(clampSeg)
         library(readABF)
+    ```
 
     You can install these packages by typing
 
+    ```r
         install.packages(c('clampSeg', 'readABF'))
+    ```
 
     For further help how to install R packages, please visit [https://www.r-project.org/](https://www.r-project.org/).
 
+    Important note: `clampSeg-1.1-0` is submitted to CRAN, but its appearance might take few more days because of their summer break. In the mean while please install it from source. Download the zip file, which is in the top level on github, and type
+
+     ```
+         R CMD INSTALL clampSeg_1.1-0.tar.gz
+     ```
+
 6. Your `rpy2` installation works correctly with the R version you have. Type into your Python interpreter:
 
+    ```python
         from rpy2.robjects.packages import importr
         readABF = importr("readABF")
         readABF.__version__
+    ```
 
-It should return `'1.0.1'` or later. If there are problems with that, they are, sadly, non-trivial to fix. Carefully reinstalling rpy2 is an option. [rpy2 docs](http://rpy.sourceforge.net/rpy2/doc-dev/html/overview.html#installation) might be helpful.
+    It should return `'1.0.1'` or later. If there are problems with that, they are, sadly, non-trivial to fix. Carefully reinstalling rpy2 is an option. [rpy2 docs](http://rpy.sourceforge.net/rpy2/doc-dev/html/overview.html#installation) might be helpful.
 
 ### License
 
