@@ -61,6 +61,9 @@ class ATFEditor(Toplevel):
             unit_selector.pack(padx=10, pady=10)
 
             ok = Button(self, text="Load", command=self.load)
+            ok_all = Button(self, text="Load All")
+            #ok_all = Button(self, text="Load All", command=self.load_all)
+            #ok_all.pack(side="middle", fill="x", padx=10, pady=10)
             ok.pack(side="left", fill="x", padx=10, pady=10)
             cancel = Button(self, text="Don't load", command=self.destroy)
             cancel.pack(side="right", fill="x", padx=10, pady=10)

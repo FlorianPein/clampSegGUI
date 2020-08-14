@@ -43,6 +43,9 @@ class ClampSegController:
         elif event == "add_atf_dataset":
             atf_object, params = args
             self.model.add_atf_dataset(atf_object, **params)
+        elif event == "add_multiple_datasets":
+            abf_object, params = args
+            self.model.add_multiple_datasets(abf_object, **params)
         elif event == "add_abf_dataset":
             abf_object, params = args
             self.model.add_abf_dataset(abf_object, **params)

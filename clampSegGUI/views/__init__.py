@@ -30,10 +30,7 @@ class TkView:
       self.root.update_idletasks() # needed for winfo_X to work properly
       self.root.minsize(width=self.root.winfo_width(),
                         height=self.root.winfo_height()+200)
-      try:
-         rpy2.rinterface_lib.callbacks.consoleread = create_rcache_yes_no
-      except:
-         rpy2.rinterface.consoleread = create_rcache_yes_no
+      rpy2.rinterface_lib.callbacks.consoleread = create_rcache_yes_no
 
    def inform(self, model_data):
       """

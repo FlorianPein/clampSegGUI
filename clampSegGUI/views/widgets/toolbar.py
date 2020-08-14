@@ -3,10 +3,15 @@ from collections import OrderedDict
 from typing import Optional
 from tkinter import filedialog, messagebox
 from tkinter.ttk import Button, Frame, Label, Treeview, Scrollbar
-from .atf_editor import ATFEditor
-from .abf_editor import ABFEditor
+
+# from clampSegGUI.views.widgets.multiple_datasets_editor import MultipleEditor
+
+from .MultipleEditor import MultipleABFEditor
+from .Multiple_atf_Editor import MultipleATFEditor
 from .dataset_editor import datasetEditor
 from .mplframe import MatplotlibFrame
+from .test import test1
+from ...model.R_wrappers import ABF
 
 
 class Toolbar(Frame):
@@ -21,7 +26,7 @@ class Toolbar(Frame):
         Similar to str.capitalize but handles whitespace and words like HTML
         differently.
         """
-        return ' '.join((s[0].upper()+s[1:]).split('_'))
+        return ' '.join((s[0].upper() + s[1:]).split('_'))
 
     def __init__(self, parent, dispatch_event):
         super().__init__(parent)
@@ -33,7 +38,7 @@ class Toolbar(Frame):
                 self, text=self.label(key), compound="bottom")
             self.buttons[key].config(image=icons[key],
                                      command=getattr(self, key))
-        #self.buttons["load_project"].config(image=u"\u128449" )
+        # self.buttons["load_project"].config(image=u"\u128449" )
 
         for i, button in enumerate(self.buttons.values()):
             button.pack(side="left", fill="x", expand=True)
@@ -64,8 +69,10 @@ class Toolbar(Frame):
             for key in ["save_project", "save_project_as", "add_datasets"]:
                 self.buttons[key].config(state="normal")
             self.project_path = self.project.path  # type: Optional[str]
+
             if self.project.datasets:
                 sel = self.project.selection
+
                 if len(sel) > 0:
                     for key in ["remove_datasets", "edit_datasets", "create_plots"]:
                         self.buttons[key].config(state="normal")
@@ -123,14 +130,14 @@ class Toolbar(Frame):
             name = "Untitled.csg"
         path = filedialog.asksaveasfilename(title="Save project as...",
                                             defaultextension=".csg",  # TODO: testing
-                                            filetypes =[
+                                            filetypes=[
                                                 ('csg', '.csg'),
                                                 ('All files', '.*')
 
                                             ],
                                             initialfile=name)
         if type(path) == str:
-            if path is not "":
+            if path != "":
                 self.dispatch_event("save_project_as", path)
 
     def add_datasets(self):
@@ -139,6 +146,7 @@ class Toolbar(Frame):
         First opens a filedialog to select the datasets.
         Then for every file selected opens the appropriate editor.
         """
+        test1.alpha = False
         paths = filedialog.askopenfilenames(title="Add datasets",
                                             filetypes=[
                                                 ('Axon Binary Files', '.abf'),
@@ -146,35 +154,44 @@ class Toolbar(Frame):
                                                 ('All files', '.*')])
         # TODO: display tkinter message in case of error
         # TODO: Check ob path bereits im project ist. Falls ja skip it ?
+
+        lst1 = []
+        lst2 = []
+
         skipped = set()  # type: Set[str]
         for path in paths:
             _, ext = os.path.splitext(path)
             ext = ext.lower()
             if ext == ".atf":
-                Editor = ATFEditor
+                lst2.append(path)
             elif ext == ".abf":
-                Editor = ABFEditor
+                lst1.append(path)
             else:
                 skipped.add(ext)
-                continue
-            self.editor = Editor(self, path, self.dispatch_event)
-            try:
-                self.editor.grab_set()
-                self.wait_window(self.editor)
-            except:
-                pass
-            self.editor = None
+
+        if len(lst1) != 0:
+            Editor = MultipleABFEditor
+            self.editor = Editor(self, lst1, self.dispatch_event)
+        if len(lst2) != 0:
+            Editor = MultipleATFEditor
+            self.editor = Editor(self, lst2, self.dispatch_event)
+
+
         if skipped:
             messagebox.showwarning("Warning",
                                    "Skipped files with unknown extensions {}".
                                    format(", ".join(skipped)))
 
+
+
+        test1.alpha = False
+
     def remove_datasets(self):
         """
         Removes the selected datasets via communication with the controller.
         """
-        if not messagebox.askokcancel("Delete selected datasets",
-                                      "This will delete the selected datasets."):
+        if not messagebox.askokcancel("Remove selected datasets",
+                                      "This will remove the selected datasets from the project."):
             return
         self.dispatch_event("delete_selected_dataset")
 
@@ -215,7 +232,7 @@ class Toolbar(Frame):
         for i in self.project.selection:
             if self.project.datasets[i].results:
                 name = os.path.basename(self.project.datasets[i].path)
-                name = os.path.splitext(name)[0]+".csv"
+                name = os.path.splitext(name)[0] + ".csv"
                 path = filedialog.asksaveasfilename(title=os.path.basename(self.project.datasets[i].path),
                                                     filetypes=(
                                                         ("csv files", "*.csv"), ("all files", "*.*")),

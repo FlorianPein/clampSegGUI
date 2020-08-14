@@ -25,6 +25,7 @@ class RightTree(Frame):
         self.dispatch_event = dispatch_event
         self.tree = Treeview(self, columns=["value"],
                              show="tree")
+        #self.configure(height=1000)
         self.scrollbar_y = Scrollbar(self.tree, orient="vertical")
         self.scrollbar = Scrollbar(self.tree, orient="horizontal")
         self.scrollbar.config(command=self.tree.xview)
@@ -73,7 +74,7 @@ class RightTree(Frame):
                 self.tree.insert(
                     "", tkinter.END, "Dataset information", text="Dataset information")
                 self.tree.insert("Dataset information", tkinter.END, "Dataset Path", text="Path", values=[
-                                 project.datasets[index].path])
+                    project.datasets[index].path])
                 self.tree.insert("Dataset information", tkinter.END, "Rows", text="Rows", values=[len(
                     project.datasets[index].data)])  # example: 120000 rows with time from 0 to 59.9995 s.
                 # HERE I AM
@@ -81,31 +82,107 @@ class RightTree(Frame):
                 if textlines == []:
                     textlines.append("No description given.")
                 self.tree.insert("Dataset information", tkinter.END,
-                                    "Dataset Description", text="Description", values=[textlines[0]])
+                                 "Dataset Description", text="Description", values=[textlines[0]])
                 if len(textlines) > 1:
                     for i in range(1, len(textlines)):
                         self.tree.insert("Dataset information", tkinter.END, "Dataset Description %d" % (
                             i), text="", values=[textlines[i]])
+                self.tree.insert(
+                    "", tkinter.END, "Method", text="Method")
+                if project.datasets[index].metadata["Method"] == "HILDE-Homogeneous":
+                    self.tree.insert("Method", tkinter.END, value=textwrap.wrap("HILDE (homogeneous noise)"))
+                elif project.datasets[index].metadata["Method"] == "HILDE-Heterogeneous":
+                    self.tree.insert("Method", tkinter.END, value=textwrap.wrap("HILDE (heterogeneous noise)"))
+                elif project.datasets[index].metadata["Method"] == "JULES-Homogeneous":
+                    self.tree.insert("Method", tkinter.END, value=textwrap.wrap("JULES (homogeneous noise)"))
+                elif project.datasets[index].metadata["Method"] == "JSMURF-Homogeneous":
+                    self.tree.insert("Method", tkinter.END, value=textwrap.wrap("JSMURF (homogeneous noise)"))
+                else:
+                    self.tree.insert("Method", tkinter.END, value=textwrap.wrap("JSMURF (heterogeneous noise)"))
                 # Here i will go
+
                 self.tree.insert(
                     "", tkinter.END, "Dataset parameters", text="Dataset parameters")
                 self.tree.insert("Dataset parameters", tkinter.END, "Sampling rate in Hz",
-                                 text="Sampling rate in Hz", values=project.datasets[index].metadata["Sampling rate in Hz"])
+                                 text="Sampling rate in Hz",
+                                 values=project.datasets[index].metadata["Sampling rate in Hz"])
                 self.tree.insert("Dataset parameters", tkinter.END, "Cut-off frequency in Hz",
-                                 text="Cut-off frequency in Hz", values=[project.datasets[index].metadata["Cut-off frequency in Hz"]])
+                                 text="Cut-off frequency in Hz",
+                                 values=[project.datasets[index].metadata["Cut-off frequency in Hz"]])
                 self.tree.insert("Dataset parameters", tkinter.END, "Filter type", text="Filter type", values=[
-                                 project.datasets[index].metadata["Filter type"]])
-                if project.datasets[index].metadata["Quantile provided"]:
-                    self.tree.insert("Dataset parameters", tkinter.END, "Quantile", text="Quantile", values=[
-                                     project.datasets[index].metadata["Quantile"]])
+                    project.datasets[index].metadata["Filter type"]])
+
+                if project.datasets[index].metadata["Method"] == "HILDE-Homogeneous":
+                    self.tree.insert("Dataset parameters", tkinter.END, "Quantile 1", text="Quantile 1", values=[
+                        "will be computed by MC simulation"])
+                    self.tree.insert("Quantile 1", tkinter.END, "Significance level 1", text="Alpha1", values=[
+                        project.datasets[index].metadata["Significance level 1"]])
+                    # self.tree.insert("Quantile 1", tkinter.END, "Repetitions 1", text="Repetitions", values=[
+                    #     project.datasets[index].metadata["Repetitions"]])
+                    self.tree.insert("Quantile 1", tkinter.END, "Repetitions ", text="Repetitions", values=[
+                        project.datasets[index].metadata["Repetitions_Hilde"]])
+
+                    self.tree.insert("Dataset parameters", tkinter.END, "Quantile 2", text="Quantile 2", values=[
+                        "will be computed by MC simulation"])
+                    self.tree.insert("Quantile 2", tkinter.END, "Significance level 2", text="Alpha2", values=[
+                        project.datasets[index].metadata["Significance level 2"]])
+                    self.tree.insert("Quantile 2", tkinter.END, "Repetitions", text="Repetitions", values=[
+                        project.datasets[index].metadata["Repetitions_Hilde"]])
+
+                elif project.datasets[index].metadata["Method"] == "HILDE-Heterogeneous":
+                    self.tree.insert("Dataset parameters", tkinter.END, "Quantile 1", text="Quantile 1", values=[
+                        "will be computed by MC simulation"])
+                    self.tree.insert("Quantile 1", tkinter.END, "Significance level 1", text="Alpha1",
+                                     values=[
+                                         project.datasets[index].metadata["Significance level 1"]])
+                    self.tree.insert("Quantile 1", tkinter.END, "Repetitions ", text="Repetitions", values=[
+                        project.datasets[index].metadata["Repetitions_Hilde"]])
+
+                    self.tree.insert("Dataset parameters", tkinter.END,  "Quantile 2", text="Quantile 2", values=[
+                        "will be computed by MC simulation"])
+                    self.tree.insert("Quantile 2", tkinter.END, "Significance level 2", text="Alpha2",
+                                     values=[
+                                         project.datasets[index].metadata["Significance level 2"]])
+                    self.tree.insert("Quantile 2", tkinter.END, "Repetitions", text="Repetitions", values=[
+                        project.datasets[index].metadata["Repetitions_Hilde"]])
+
+                elif project.datasets[index].metadata["Method"] == "JULES-Homogeneous":
+                    if project.datasets[index].metadata["Quantile_JULES_HOMOGENEOUS provided"]:
+                        self.tree.insert("Dataset parameters", tkinter.END, "Quantile", text="Quantile", values=[
+                            project.datasets[index].metadata["Quantile_JULES_HOMOGENEOUS"]])
+                    else:
+                        self.tree.insert("Dataset parameters", tkinter.END, "Quantile", text="Quantile", values=[
+                            "will be computed by MC simulation"])
+                        self.tree.insert("Quantile", tkinter.END, "Significance level", text="Alpha",
+                                         values=[
+                                             project.datasets[index].metadata["Significance level"]])
+                        self.tree.insert("Quantile", tkinter.END, "Repetitions", text="Repetitions", values=[
+                            project.datasets[index].metadata["Repetitions"]])
+
+                elif project.datasets[index].metadata["Method"] == "JSMURF-Homogeneous":
+                    if project.datasets[index].metadata["Quantile_JSMURF_HOMOGENEOUS provided"]:
+                        self.tree.insert("Dataset parameters", tkinter.END, "Quantile", text="Quantile", values=[
+                            project.datasets[index].metadata["Quantile_JSMURF_HOMOGENEOUS"]])
+                    else:
+
+                        self.tree.insert("Dataset parameters", tkinter.END, "Quantile", text="Quantile", values=[
+                            "will be computed by MC simulation"])
+                        self.tree.insert("Quantile", tkinter.END, "Significance level", text="Alpha",
+                                         values=[
+                                             project.datasets[index].metadata["Significance level"]])
+                        self.tree.insert("Quantile", tkinter.END, "Repetitions", text="Repetitions", values=[
+                            project.datasets[index].metadata["Repetitions"]])
+
                 else:
-                    self.tree.insert("Dataset parameters", tkinter.END, "Quantile", text="Quantile", values=[
-                                     "will be computed by MC simulation"])
-                    self.tree.insert("Quantile", tkinter.END, "Significance level", text="Significance level", values=[
-                                     project.datasets[index].metadata["Significance level"]])
+                    self.tree.insert("Dataset parameters", tkinter.END,  "Quantile", text="Quantile", values=[
+                        "will be computed by MC simulation"])
+                    self.tree.insert("Quantile", tkinter.END, "Significance level", text="Alpha", values=[
+                        project.datasets[index].metadata["Significance level"]])
                     self.tree.insert("Quantile", tkinter.END, "Repetitions", text="Repetitions", values=[
-                                     project.datasets[index].metadata["Repetitions"]])
+                        project.datasets[index].metadata["Repetitions"]])
+
                 maxw = 600
+                #600
                 for child in self.tree.get_children():
                     self.tree.see(child)
                     w = self.get_size_in_pixels(
@@ -122,12 +199,16 @@ class RightTree(Frame):
                             self.tree.see(ggrandchild)
                             w = self.get_size_in_pixels(
                                 str(self.tree.item(ggrandchild)['values']))
+
                             if (w > maxw):
                                 maxw = w
+
                 self.tree.column(0, width=maxw)
                 self.tree.column("#0", width=200, stretch=False)
+                #200
 
             else:
                 self.tree.column("#0", width=1000)
+                #1000
                 self.tree.insert("", tkinter.END, "Project information",
                                  text="Multiple Datasets have been selected, select single dataset to show project information.")

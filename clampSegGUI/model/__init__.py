@@ -3,18 +3,21 @@ from typing import Any, Dict, List, Optional, Set
 from .dataset import Dataset
 from .project import Project
 import numpy as np
+import math
 
 
 def informs(f):
     """
     A decorator forcing a model method to inform the controller.
     """
+
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         result = f(self, *args, **kwargs)
         data = self.current_data()
         self.controller.inform(data)
         return result
+
     return wrapper
 
 
@@ -62,6 +65,15 @@ class ClampSegModel:
         self.project.add(dataset)
 
     @informs
+    def add_multiple_datasets(self, paths, **params) -> None:
+        """
+        Reads abf_object and converts it into dataset class.
+        """
+        for i in paths:
+            dataset = Dataset.fromABF(i, **params)
+            self.project.add(dataset)
+
+    @informs
     def remove_datasets(self) -> None:
         """
         Removes the datasets selected in the project.selection parameter. 
@@ -96,7 +108,7 @@ class ClampSegModel:
         pass
 
     @informs
-    def calculate(self, message, dataset_setup,errormessage) -> None:
+    def calculate(self, message, dataset_setup, errormessage) -> None:
         """
         For every dataset in the queue does the following:
         First checks the parameters. If they are wrong, project an errormessage.
@@ -107,21 +119,69 @@ class ClampSegModel:
         """
         stopcheck = False
         for dataset in self.project.queue:
-            if  "NA" in (self.project.datasets[dataset].metadata["Cut-off frequency in Hz"] ,self.project.datasets[dataset].metadata["Filter type"]):
+            if "NA" in (self.project.datasets[dataset].metadata["Cut-off frequency in Hz"],
+                        self.project.datasets[dataset].metadata["Filter type"]):
                 errormessage(self.project.datasets[dataset])
             else:
                 dataset_setup(self.project.datasets[dataset])
-                stopcheck = self.project.datasets[dataset].calculate((
-                    "bessel",
-                    int(self.project.datasets[dataset].metadata["Filter type"].split(
-                        '-')[0]),
-                    self.project.datasets[dataset].metadata["Cut-off frequency in Hz"],
-                    self.project.datasets[dataset].metadata["Sampling rate in Hz"],
-                    self.project.datasets[dataset].metadata["Quantile"],
-                    self.project.datasets[dataset].metadata["Significance level"],
-                    self.project.datasets[dataset].metadata["Repetitions"]), message)
-            if stopcheck:
-                break
+
+                if self.project.datasets[dataset].metadata["Method"] == "JULES-Homogeneous":
+                    stopcheck = self.project.datasets[dataset].calculate_JULES_HOMOGENEOUS((
+                        "bessel",
+                        int(self.project.datasets[dataset].metadata["Filter type"].split(
+                            '-')[0]),
+                        self.project.datasets[dataset].metadata["Cut-off frequency in Hz"],
+                        self.project.datasets[dataset].metadata["Sampling rate in Hz"],
+                        self.project.datasets[dataset].metadata["Quantile_JULES_HOMOGENEOUS"],
+                        self.project.datasets[dataset].metadata["Significance level"],
+                        self.project.datasets[dataset].metadata["Repetitions"]), message)
+                elif self.project.datasets[dataset].metadata["Method"] == "JSMURF-Homogeneous":
+                    stopcheck = self.project.datasets[dataset].calculate_JSMURF_HOMOGENEOUS((
+                        "bessel",
+                        int(self.project.datasets[dataset].metadata["Filter type"].split(
+                            '-')[0]),
+                        self.project.datasets[dataset].metadata["Cut-off frequency in Hz"],
+                        self.project.datasets[dataset].metadata["Sampling rate in Hz"],
+                        self.project.datasets[dataset].metadata["Quantile_JSMURF_HOMOGENEOUS"],
+                        self.project.datasets[dataset].metadata["Significance level"],
+                        self.project.datasets[dataset].metadata["Repetitions"]), message)
+                elif self.project.datasets[dataset].metadata["Method"] == "JSMURF-Heterogeneous":
+                    stopcheck = self.project.datasets[dataset].calculate_JSMURF_HETEROGENEOUS((
+                        "bessel",
+                        int(self.project.datasets[dataset].metadata["Filter type"].split(
+                            '-')[0]),
+                        self.project.datasets[dataset].metadata["Cut-off frequency in Hz"],
+                        self.project.datasets[dataset].metadata["Sampling rate in Hz"],
+                        self.project.datasets[dataset].metadata["Quantile_JSMURF_HETEROGENEOUS"],
+                        self.project.datasets[dataset].metadata["Significance level"],
+                        self.project.datasets[dataset].metadata["Repetitions"]), message)
+                elif self.project.datasets[dataset].metadata["Method"] == "HILDE-Homogeneous":
+                    stopcheck = self.project.datasets[dataset].calculate_HILDE_HOMOGENEOUS((
+                        "bessel",
+                        int(self.project.datasets[dataset].metadata["Filter type"].split(
+                            '-')[0]),
+                        self.project.datasets[dataset].metadata["Cut-off frequency in Hz"],
+                        self.project.datasets[dataset].metadata["Sampling rate in Hz"],
+                        self.project.datasets[dataset].metadata["Quantile1_HILDE_HOMOGENEOUS"],
+                        self.project.datasets[dataset].metadata["Quantile2_HILDE_HOMOGENEOUS"],
+                        self.project.datasets[dataset].metadata["Significance level 1"],
+                        self.project.datasets[dataset].metadata["Significance level 2"],
+                        self.project.datasets[dataset].metadata["Repetitions_Hilde"]), message)
+                elif self.project.datasets[dataset].metadata["Method"] == "HILDE-Heterogeneous":
+                    stopcheck = self.project.datasets[dataset].calculate_HILDE_HETEROGENEOUS((
+                        "bessel",
+                        int(self.project.datasets[dataset].metadata["Filter type"].split(
+                            '-')[0]),
+                        self.project.datasets[dataset].metadata["Cut-off frequency in Hz"],
+                        self.project.datasets[dataset].metadata["Sampling rate in Hz"],
+                        self.project.datasets[dataset].metadata["Quantile1_HILDE_HETEROGENEOUS"],
+                        self.project.datasets[dataset].metadata["Quantile2_HILDE_HETEROGENEOUS"],
+                        self.project.datasets[dataset].metadata["Significance level 1"],
+                        self.project.datasets[dataset].metadata["Significance level 2"],
+                        self.project.datasets[dataset].metadata["Repetitions_Hilde"]), message)
+
+                if stopcheck:
+                    break
         self.project.clear_queue()
 
     @informs
@@ -150,10 +210,8 @@ class ClampSegModel:
         y = np.asarray(self.project.datasets[index].results.y)
         dat = np.asarray((xl, xr, y))
         unit = self.project.datasets[index].metadata["Unit"]
-        with open(path, "w") as f:
-            f.write('"Time_start","Time_end","Value in [%s]"\n' % (unit))
-            for i in range(0, len(dat[0, :])):
-                f.write('%f,%f,%f\n' % (dat[0, i], dat[1, i], dat[2, i]))
+        decimals = 2 + math.ceil(math.log10(self.project.datasets[index].metadata["Sampling rate in Hz"]))
+        np.savetxt(path, dat.T, fmt="%.{}f,%.{}f,%.8f".format(decimals, decimals), header='"Time_start","Time_end","Value in [%s]"' % (unit), delimiter=",", comments="")
 
     def HTML_report(self, path: str) -> None:
         """

@@ -70,12 +70,19 @@ class Project:
         """
         self.queue = []
 
+    # def set_metadata(self, metadata):
+    #     """
+    #     Sets the metadata given in 'metadata' for all datasets in the selection.
+    #     """
+    #     for name in self.selection:
+    #         self.datasets[name].metadata = metadata.copy()
+
     def set_metadata(self, metadata):
         """
         Sets the metadata given in 'metadata' for all datasets in the selection.
         """
         for name in self.selection:
-            self.datasets[name].metadata = metadata.copy()
+            self.datasets[name].metadata = metadata[name].copy()
 
     def change_selection_to(self, sel):
         """

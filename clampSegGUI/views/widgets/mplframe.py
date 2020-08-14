@@ -1,10 +1,7 @@
 import os
 from tkinter import Toplevel, Label, TOP, BOTH, Button
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-try:
-    from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
-except:
-    from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg as NavigationToolbar2Tk 
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.widgets import RectangleSelector
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,7 +39,7 @@ class MatplotlibFrame(Toplevel):
         # Setting Titles, Drawing Plots
         self.axes.set_title("Scatter Plot")  # TODO Find better Name
         self.title(os.path.basename(self.dataset.path))
-        Label(self, text="Select Points by click-and-drag to create a square\nAfter Selection press Enter\nPressing u will unselect all datapoints\n+/- to change thickness of points\npress ,/. to change opacity").pack(side=TOP)
+        Label(self, text="Select points by click-and-drag to create a square\nAfter selection press Enter\nPressing u will unselect all datapoints\n+/- to change thickness of points\nPress ,/. to change opacity").pack(side=TOP)
         # Implementing
         self.alpha = 5
         self.selecting, self.adding = False, False

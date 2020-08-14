@@ -8,7 +8,8 @@ from rpy2.robjects.vectors import IntVector
 from rpy2.rinterface import NULL, RRuntimeWarning
 
 import numpy as np
-#from rpy2.rinterface import RRuntimeError
+
+# from rpy2.rinterface import RRuntimeError
 try:
     from rpy2.rinterface import RRuntimeError
 except ImportError:
@@ -30,6 +31,7 @@ def RWarnings(level):
     yield
     r.options(warn=old)
     warnings.resetwarnings()
+
 
 # Historically, we were aiming for the following two-stage approach:
 
@@ -76,6 +78,7 @@ def may_raise(exception_cls):
     """
     Silences the exceptions specified.
     """
+
     def silencer(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -84,7 +87,9 @@ def may_raise(exception_cls):
                     return f(*args, **kwargs)
             except RRuntimeError as e:
                 raise exception_cls(e.args[0])
+
         return wrapper
+
     return silencer
 
 
@@ -153,6 +158,18 @@ class ABF:
         # [0] because we want a normal Python str, not an rpy2 StrVector.
         return self._abf[self._abf.names.index("path")][0]
 
+    def names1(self):
+        """
+        Short access to the path variable.
+        """
+        # Yes, the notation for accessing a field in a ListVector is that long.
+        # [0] because we want a normal Python str, not an rpy2 StrVector.
+
+        return list(self._abf[self._abf.names.index("channelNames")])
+
+    def units1(self):
+        return list(self._abf[self._abf.names.index("channelUnits")])
+
     @may_raise(ReadIntoRError)
     def as_data_frame(self, sweep, channels, unit):
         """
@@ -163,6 +180,7 @@ class ABF:
         sweep = NULL if sweep is None else sweep
         unit = NULL if unit is None else unit
         channels = IntVector(channels)
+
         return r["as.data.frame"](self._abf, sweep=sweep,
                                   type="one",
                                   channels=channels,
@@ -172,9 +190,9 @@ class ABF:
 fit_to_xy = r("""
 function (input) {
    # simplified, from plot.stepblock in stepR:
-   xl <- input$fit$leftEnd
-   xr <- input$fit$rightEnd
-   ys <- input$fit$value
+   xl <- input$idealization$leftEnd
+   xr <- input$idealization$rightEnd
+   ys <- input$idealization$value
    q  <- input$q
    list(ys = ys, q=q, xl=xl, xr=xr)
 }
@@ -193,6 +211,7 @@ class Fit:
         self.q = xy[xy.names.index("q")]
 
 
+
 FILTER_TEMPLATE = """
 clampSeg::lowpassFilter(type = {filter_type!r},
                         param = list(pole = {pole},
@@ -200,13 +219,21 @@ clampSeg::lowpassFilter(type = {filter_type!r},
                         len = 11L, sr = {sampling_rate})
 """
 
-DEFAULT_OPTIONS = """
+DEFAULT_OPTIONS1 = """
 list(simulation = "vector",
      save = list(workspace = c("vector"), fileSystem = c("vector")),
      load = list(workspace = c("vector"), fileSystem = c("vector")))
 """
+
+DEFAULT_OPTIONS2 = """
+list(simulation = "matrix",
+     save = list(workspace = c("matrix"), fileSystem = c("matrix")),
+     load = list(workspace = c("matrix"), fileSystem = c("matrix")))
+"""
+
+
 @may_raise(ClampSegError)
-def calculate(data, params, messages):
+def calculate_JULES_HOMOGENEOUS(data, params, messages):
     """
     Calculates the fit and quantile, if necessary. 
     First sets up all the variables.
@@ -214,6 +241,7 @@ def calculate(data, params, messages):
     Afterwards starts the fit calculation.
     If any of this fails, returns None to signal failure.
     """
+    # Method:JULES HOMOGENEOUS
     filter_type, pole, cutoff, sampling_rate = params[0:4]
     filter = r(FILTER_TEMPLATE.format(filter_type=filter_type,
                                       pole=pole,
@@ -226,21 +254,207 @@ def calculate(data, params, messages):
     # quantile = NULL means: has to be computed from alpha and repetitions
     alpha = NULL if alpha is None else alpha
     repetitions = NULL if repetitions is None else repetitions
-    options = r(DEFAULT_OPTIONS)
-    # This is a necessary Bugfix by defining each into r environment, maybe find more elegant solution
-    r("""
-      each<-1
-   """)
+    options1 = r(DEFAULT_OPTIONS1)
+
     with RWarnings("ignore"):
         try:
             if quantile == NULL:
-                messages(-1,repetitions,1) ## Setting up the calculate_wait_window
-                quantile = r("clampSeg::getCritVal")(   n = len(data), filter = filter,
-                                                        alpha = alpha,
-                                                        r = repetitions, messages = messages,
-                                                        options = options)
-            messages(-2,repetitions,1)## Setting up the calculate_wait_window
-            fit = r("clampSeg::jules")(data, filter, q=quantile, output="everything")
+                messages(-1, repetitions, 1)  ## Setting up the calculate_wait_window
+                quantile = r("clampSeg::getCritVal")(n=len(data), filter=filter,
+                                                     alpha=alpha,
+                                                     r=repetitions, messages=messages,
+                                                     options=options1)
+            messages(-2, repetitions, 1)  ## Setting up the calculate_wait_window
+            fit = r("clampSeg::jules")(data, filter, q=quantile, output="eachStep")
+            return Fit(fit)
+        except RRuntimeError:
+            print("User Interrupt Of Monte Carlo Simulations")
+        return None
+
+
+@may_raise(ClampSegError)
+def calculate_JSMURF_HOMOGENEOUS(data, params, messages):
+    """
+    Calculates the fit and quantile, if necessary.
+    First sets up all the variables.
+    Then starts the quantile calculation.
+    Afterwards starts the fit calculation.
+    If any of this fails, returns None to signal failure.
+    """
+    # Method:JSMURF HOMOGENEOUS
+    filter_type, pole, cutoff, sampling_rate = params[0:4]
+    filter = r(FILTER_TEMPLATE.format(filter_type=filter_type,
+                                      pole=pole,
+                                      cutoff=cutoff,
+                                      sampling_rate=sampling_rate))
+
+    quantile, alpha, repetitions = params[4:]
+    # alpha is significance level
+    quantile = NULL if quantile is None else float(quantile)
+    # quantile = NULL means: has to be computed from alpha and repetitions
+    alpha = NULL if alpha is None else alpha
+    repetitions = NULL if repetitions is None else repetitions
+    options1 = r(DEFAULT_OPTIONS1)
+    with RWarnings("ignore"):
+        try:
+            if quantile == NULL:
+                messages(-1, repetitions, 1)  ## Setting up the calculate_wait_window
+                quantile = r("clampSeg::getCritVal")(n=len(data), filter=filter,
+                                                     family="jsmurfPS",
+                                                     alpha=alpha,
+                                                     r=repetitions, messages=messages,
+                                                     options=options1)
+
+            messages(-2, repetitions, 1)  ## Setting up the calculate_wait_window
+            fit = r("clampSeg::jsmurf")(data, filter, q=quantile, output="eachStep", family="jsmurfPS")
+            return Fit(fit)
+        except RRuntimeError:
+            print("User Interrupt Of Monte Carlo Simulations")
+        return None
+
+
+@may_raise(ClampSegError)
+def calculate_JSMURF_HETEROGENEOUS(data, params, messages):
+    """
+    Calculates the fit and quantile, if necessary.
+    First sets up all the variables.
+    Then starts the quantile calculation.
+    Afterwards starts the fit calculation.
+    If any of this fails, returns None to signal failure.
+    """
+    # Method:JSMURF HETEROGENEOUS
+    filter_type, pole, cutoff, sampling_rate = params[0:4]
+    filter = r(FILTER_TEMPLATE.format(filter_type=filter_type,
+                                      pole=pole,
+                                      cutoff=cutoff,
+                                      sampling_rate=sampling_rate))
+
+    quantile, alpha, repetitions = params[4:]
+    # alpha is significance level
+    quantile = NULL if quantile is None else float(quantile)
+    # quantile = NULL means: has to be computed from alpha and repetitions
+    alpha = NULL if alpha is None else alpha
+    repetitions = NULL if repetitions is None else repetitions
+    options2 = r(DEFAULT_OPTIONS2)
+    with RWarnings("ignore"):
+        try:
+            if quantile == NULL:
+                messages(-1, repetitions, 1)  ## Setting up the calculate_wait_window
+                quantile = r("clampSeg::getCritVal")(n=len(data), filter=filter,
+                                                     family="hjsmurf",
+                                                     alpha=alpha,
+                                                     r=repetitions, messages=messages,
+                                                     options=options2)
+
+            messages(-2, repetitions, 1)  ## Setting up the calculate_wait_window
+
+            fit = r("clampSeg::jsmurf")(data, filter, q=quantile, output="eachStep", family="hjsmurf")
+
+            return Fit(fit)
+        except RRuntimeError:
+            print("User Interrupt Of Monte Carlo Simulations")
+        return None
+
+
+@may_raise(ClampSegError)
+def calculate_HILDE_HETEROGENEOUS(data, params, messages):
+    """
+    Calculates the fit and quantile, if necessary.
+    First sets up all the variables.
+    Then starts the quantile calculation.
+    Afterwards starts the fit calculation.
+    If any of this fails, returns None to signal failure.
+    """
+    # Method:HILDE HETEROGEEOUS
+    filter_type, pole, cutoff, sampling_rate = params[0:4]
+    filter = r(FILTER_TEMPLATE.format(filter_type=filter_type,
+                                      pole=pole,
+                                      cutoff=cutoff,
+                                      sampling_rate=sampling_rate))
+
+    quantile1, quantile2, alpha1, alpha2, repetitions = params[4:]
+    # alpha is significance level
+    quantile1 = NULL if quantile1 is None else float(quantile1)
+    # quantile = NULL means: has to be computed from alpha and repetitions
+    quantile2 = NULL if quantile2 is None else float(quantile2)
+    alpha1 = NULL if alpha1 is None else alpha1
+    alpha2 = NULL if alpha2 is None else alpha2
+    repetitions = NULL if repetitions is None else repetitions
+    options2 = r(DEFAULT_OPTIONS2)
+    with RWarnings("ignore"):
+        try:
+            if quantile1 == NULL:
+                messages(-1, repetitions, 1)  ## Setting up the calculate_wait_window
+                quantile1 = r("clampSeg::getCritVal")(n=len(data), filter=filter,
+                                                      family="hjsmurf",
+                                                      alpha=alpha1,
+                                                      r=repetitions, messages=messages,
+                                                      options=options2)
+            if quantile2 == NULL:
+                messages(-1, repetitions, 1)  ## Setting up the calculate_wait_window
+                quantile2 = r("clampSeg::getCritVal")(n=len(data), filter=filter,
+                                                      family="2Param",
+                                                      alpha=alpha2,
+                                                      r=repetitions, messages=messages,
+                                                      options=options2)
+
+            messages(-2, repetitions, 1)  ## Setting up the calculate_wait_window
+            fit = r("clampSeg::hilde")(data, filter, q1=quantile1, family="hjsmurf", q2=quantile2, output="eachStep", method="2Param")
+
+            return Fit(fit)
+        except RRuntimeError:
+            print("User Interrupt Of Monte Carlo Simulations")
+        return None
+
+
+@may_raise(ClampSegError)
+def calculate_HILDE_HOMOGENEOUS(data, params, messages):
+    """
+    Calculates the fit and quantile, if necessary.
+    First sets up all the variables.
+    Then starts the quantile calculation.
+    Afterwards starts the fit calculation.
+    If any of this fails, returns None to signal failure.
+    """
+    # Method:HILDE HOMOGENEOUS
+    filter_type, pole, cutoff, sampling_rate = params[0:4]
+    filter = r(FILTER_TEMPLATE.format(filter_type=filter_type,
+                                      pole=pole,
+                                      cutoff=cutoff,
+                                      sampling_rate=sampling_rate))
+
+    quantile1, quantile2, alpha1, alpha2, repetitions = params[4:]
+    # alpha is significance level
+    quantile1 = NULL if quantile1 is None else float(quantile1)
+    # quantile = NULL means: has to be computed from alpha and repetitions
+    quantile2 = NULL if quantile2 is None else float(quantile2)
+    alpha1 = NULL if alpha1 is None else alpha1
+    alpha2 = NULL if alpha2 is None else alpha2
+    repetitions = NULL if repetitions is None else repetitions
+    options2 = r(DEFAULT_OPTIONS2)
+    options1 = r(DEFAULT_OPTIONS1)
+    with RWarnings("ignore"):
+        try:
+            if quantile1 == NULL:
+                messages(-1, repetitions, 1)  ## Setting up the calculate_wait_window
+                quantile1 = r("clampSeg::getCritVal")(n=len(data), filter=filter,
+                                                      family="jsmurfPS",
+                                                      alpha=alpha1,
+                                                      r=repetitions, messages=messages,
+                                                      options=options1)
+            if quantile2 == NULL:
+                messages(-1, repetitions, 1)  ## Setting up the calculate_wait_window
+                quantile2 = r("clampSeg::getCritVal")(n=len(data), filter=filter,
+                                                      family="LR",
+                                                      alpha=alpha2,
+                                                      r=repetitions, messages=messages,
+                                                      options=options2)
+
+            messages(-2, repetitions, 1)  ## Setting up the calculate_wait_window
+
+            fit = r("clampSeg::hilde")(data, filter, q1=quantile1, family="jsmurfPS", q2=quantile2, output="eachStep", method="LR")
+
+
             return Fit(fit)
         except RRuntimeError:
             print("User Interrupt Of Monte Carlo Simulations")

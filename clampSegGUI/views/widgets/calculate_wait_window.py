@@ -63,8 +63,11 @@ class waitWindowProgressBar(Toplevel):
                 self.title("Computation for Dataset %s"%os.path.basename(self.dataset.path))
                 self.pb.pack(pady=20, padx=20)
                 self.pb_val.set(0)
-                self.stopbutton["state"] = "normal" 
-                self.pb.configure(maximum=int(self.dataset.metadata["Repetitions"])) 
+                self.stopbutton["state"] = "normal"
+                if self.dataset.metadata["Method"] == "HILDE-Homogeneous" or self.dataset.metadata["Method"] == "HILDE-Heterogeneous":
+                    self.pb.configure(maximum=int(self.dataset.metadata["Repetitions_Hilde"]))
+                else:
+                    self.pb.configure(maximum=int(self.dataset.metadata["Repetitions"]))
                 self.labeltext.set("Currently computing quantile for Dataset:\n%s \n Press Stop! button to stop computation for current dataset." %os.path.basename(self.dataset.path))
             if (count[0]==-2):
                 self.pb.pack_forget()
