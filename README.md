@@ -1,10 +1,10 @@
 # About this GUI
 
-This graphical user interface allows easy access to the multiscale model-free idealization methods in the R-package *clampSeg*, which is available on [CRAN](https://cran.r-project.org/package=clampSeg). It supports the model-free segmentation methods [JSMURF](https://ieeexplore.ieee.org/document/6655999), [JULES](https://ieeexplore.ieee.org/document/8374882) and [HILDE](https://arxiv.org/abs/2008.02658). These methods combine multiscale testing with deconvolution to idealise patch clamp recordings. They allow to deal with subconductance states and flickering. Further details are given in `Review.pdf`.
+This graphical user interface allows easy access to the multiscale model-free idealization methods in the R-package *clampSeg*, which is available on [CRAN](https://cran.r-project.org/package=clampSeg). It supports the model-free segmentation methods [JSMURF](https://ieeexplore.ieee.org/document/6655999), [JULES](https://ieeexplore.ieee.org/document/8374882) and [HILDE](https://arxiv.org/abs/2008.02658). These methods combine multiscale testing with deconvolution to idealise patch clamp recordings. They allow to deal with subconductance states and flickering. Further details are given in a [review paper](Review.pdf).
 
 # Installation
 
-Please see `installation.pdf` for how to install clampSegGUI and its dependencies.
+Please see the [installation guide](installation.md) for how to install clampSegGUI and its dependencies.
 
 # Start
 
@@ -91,11 +91,11 @@ An option to describe the data set for the users convenience.
 
 ### Method
 
-Radio buttons for selecting the idealization method. All three approaches $\operatorname{JSMURF}$, $\operatorname{JULES}$ and $\operatorname{HILDE}$ can assume homogeneous noise, but only $\operatorname{JSMURF}$ and $\operatorname{HILDE}$ allow for heterogeneous noise. Hence, there are five methods to choose from: `JSMURF (homogeneous noise)`, `JSMURF (heterogeneous noise)`, `JULES (homogeneous noise)`, `HILDE (homogeneous noise)` and `HILDE (heterogeneous noise)`. See Section II-B in `Review.pdf` to decide which method is suitable for a given dataset.
+Radio buttons for selecting the idealization method. All three approaches JSMURF, JULES and HILDE can assume homogeneous noise, but only JSMURF and HILDE allow for heterogeneous noise. Hence, there are five methods to choose from: `JSMURF (homogeneous noise)`, `JSMURF (heterogeneous noise)`, `JULES (homogeneous noise)`, `HILDE (homogeneous noise)` and `HILDE (heterogeneous noise)`. See Section II-B in the [review paper](Review.pdf) to decide which method is suitable for a given dataset.
 
 ### Tuning parameters
 
-Which tuning parameters can be chosen depends on the selected method. All parameters can be tuned to achieve better idealizations under specific circumstances. We advise to leave the default parameters unchanged unless specific reasons exist. Further details are given in `Review.pdf`.
+Which tuning parameters can be chosen depends on the selected method. All parameters can be tuned to achieve better idealizations under specific circumstances. We advise to leave the default parameters unchanged unless specific reasons exist. Further details are given in the [review paper](Review.pdf).
 
 Similar to the *R* code, quantiles (critical values) are required to distinguish between events and noise. The quantiles are usually computed by Monte-Carlo simulations. Monte-Carlo simulations may take a while, depending on the size of the dataset and the number of repetitions it may even last up to a few hours. They are stored and loaded automatically in the background. Only at the first time (unless the R package `R.cache` was used before) the user is asked to confirm that a folder is created to store those computations permanently on the disk (they can be deleted at any time). If the user declines it, a temporary folder is used and Monte-Carlo simulations have to be computed the next time again.
 
@@ -110,15 +110,15 @@ Similar to the *R* code, quantiles (critical values) are required to distinguish
 
 *   Alpha
 
-    A probability (a real-valued number between 0 and 1) giving the error level $\alpha$.
+    A probability (a real-valued number between 0 and 1) giving the error level &alpha;.
   
 *   Alpha1, Alpha2
 
-    For $\operatorname{HILDE}$ the significance level $\alpha$ is split between `Alpha1` $\alpha_1$ and `Alpha2` $\alpha_2$ ($\alpha = \alpha_1 + \alpha_2$).
+    For HILDE the significance level &alpha; is split between `Alpha1` &alpha;<sub>1</sub> and `Alpha2` &alpha;<sub>2</sub> (&alpha; = &alpha;<sub>1</sub> + &alpha;<sub>2</sub>).
 
 *   Repetitions
 
-    An integer giving the number of repetitions $r$ for the Monte-Carlo simulations. Repetitions are individually selected and stored for the two HILDE methods and for JSMURF and JULES.
+    An integer giving the number of repetitions r for the Monte-Carlo simulations. Repetitions are individually selected and stored for the two HILDE methods and for JSMURF and JULES.
 
 ## Calculating  and exporting idealizations
 
