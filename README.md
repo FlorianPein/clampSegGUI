@@ -153,7 +153,7 @@ The plot can be saved by clicking on the save icon.
 
 # Reporting issues
 
-Please send bug reports or any other feedback to the developers by emailing [Florian Pein](fp366@cam.ac.uk). Your feedback is highly appreciated.
+Please send bug reports or any other feedback to the developers by emailing [Florian Pein](f.pein@lancaster.ac.uk). Your feedback is highly appreciated.
 
 # Acknowledgements
 
